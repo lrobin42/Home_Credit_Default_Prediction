@@ -5,7 +5,7 @@ This project explores how to evaluate different risk profiles from a retail bank
 
 ## Project Approach
 
-There a multiple very large files in this dataset, so for concision, only the EDA and modeling within the application_train csv file are included in the modeling notebook. Automated pipelines for imputation, scaling, and model fitting are employed to set a baseline performance
+There are multiple very large files in this dataset, so for concision only the EDA and modeling within the application_train csv file are included in the modeling notebook. Automated pipelines for imputation, scaling, and model fitting are employed to set a baseline performance
 measure for multiple ensemble classifiers, before employing the SMOTE algorithm to strategically oversample and undersample the dataset and refit models. 
 
 These models are assessed against ROC-AUC, Matthews correlation coefficient, precision, recall, fbeta scores, and balanced accuracy metrics to have a balanced view of model performance across classes, given  that target is highly imbalanced. 
