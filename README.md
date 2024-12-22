@@ -14,4 +14,4 @@ These models are assessed against ROC-AUC, Matthews correlation coefficient, pre
 ## Recommendations for Further Research 
 
 ## Relevant Files
-Please check out the loan_functions.py file to see the helper functions used, and requirements.txt for module/package information. Relevant dataset can be downloaded [here](https://storage.googleapis.com/341-home-credit-default/home-credit-default-risk.zip)
+Please check out the loan_functions.py file to see the helper functions used, and requirements.txt for module/package information. Relevant dataset can be downloaded [here](https://storage.googleapis.com/341-home-credit-default/home-credit-default-risk.zip).
