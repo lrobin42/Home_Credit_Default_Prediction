@@ -70,9 +70,6 @@ from numpy.typing import NDArray
 
 
 
-
-
-
 def lower_column_names(df) -> DataFrame:
     df: DataFrame = df.select(pl.all().name.map(lambda col_name: col_name.lower()))
     return df
@@ -173,9 +170,6 @@ def calculate_value_counts(df, feature):
 
 
 def plot_histogram(df, feature, title="", text="percentages") -> None:
-    # df: DataFrame = convert_to_pandas(df)
-    # value_counts = pd.DataFrame(df[feature].value_counts())
-    # value_counts["percentages"] = value_counts["count"].apply(lambda x: f"{x/len(df):.1%}")
 
     value_counts = calculate_value_counts(df, feature)
 
@@ -646,7 +640,6 @@ def instantiate_lgbm_classifier_rf(trial):
         #"learning_rate": trial.suggest_float("learning_rate", 0,1),
         "objective": "binary",
         "class_weight":trial.suggest_categorical("class_weight",["balanced", None]),   
-        "device": "gpu",
         "bagging_freq": trial.suggest_int("bagging_freq", 1,100),
         "feature_fraction_bynode": trial.suggest_float("feature_fraction_bynode", 0,1.0),
         "extra_trees": trial.suggest_categorical("extra_trees", [True, False]),
@@ -655,14 +648,7 @@ def instantiate_lgbm_classifier_rf(trial):
 
 
     }
-    return LGBMClassifier(**params, boosting_type='rf',verbose=-1)
-
-
-
-
-
-
-
+    return LGBMClassifier(**params, boosting_type='rf',verbose=-1, device='gpu')
 
 def instantiate_xgboost(trial):
     params = {
@@ -698,28 +684,15 @@ def instantiate_random_forest(trial):
     return RandomForestClassifier(**params)
 
 
-# def instantiate_random_forest(trial):
-
-# "criterion": ["gini", "entropy", "log_loss"],
-# "max_depth": list(range(1, 11)),
-# "max_features": ["sqrt", "log2", None],
-
-# n_estimators = trial.suggest_int("n_estimators", 10, 100)
-# max_depth = trial.suggest_int("max_depth", 2, 32)
-# criterion = trial.suggest_categorical("criterion", ["gini", "entropy", "log_loss"])
-
-# clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, criterion=criterion)
-# return clf
-
 
 def model_selector(clf_string, trial: Trial):
     if clf_string == "logistic_regression":
         model = instantiate_logistic_regression(trial)
-    elif clf_string == "random_forest":
+    elif clf_string == "lgbm_rf":
         model = instantiate_lgbm_classifier_rf(trial)
     elif clf_string == "extra_trees":
         model = instantiate_extra_trees(trial)
-    elif clf_string == "lightgbm":
+    elif clf_string == "lgbm":
         model = instantiate_lgbm_classifier(trial)
     elif clf_string == "xgboost":
         model = instantiate_xgboost(trial)
@@ -828,7 +801,7 @@ def calculate_model_statistics(y_true, y_predict, beta=3.0, title="statistics"):
         ],
     )
 
-def objective_1(classifier, trial : Trial, x : DataFrame, y : np.ndarray | Series, numerical_columns : Optional[list[str]]=None, categorical_columns : Optional[list[str]]=None, random_state : int=42) -> float:
+def objective(classifier, trial : Trial, x : DataFrame, y : np.ndarray | Series, numerical_columns : Optional[list[str]]=None, categorical_columns : Optional[list[str]]=None, random_state : int=42) -> float:
   if numerical_columns is None:
     numerical_columns = [
       *x.select_dtypes(exclude=['object', 'category']).columns
@@ -843,6 +816,6 @@ def objective_1(classifier, trial : Trial, x : DataFrame, y : np.ndarray | Serie
 
   kf = KFold(n_splits=3, shuffle=True, random_state=random_state)
   roc_auc_scorer:float = make_scorer(roc_auc_score, response_method='predict')
-  scores = cross_val_score(model, x, y, scoring=roc_auc_scorer, cv=kf)
+  scores = cross_val_score(model, x, y, scoring=roc_auc_scorer, cv=kf,error_score='raise')
 
   return np.min([np.mean(scores), np.median([scores])])
