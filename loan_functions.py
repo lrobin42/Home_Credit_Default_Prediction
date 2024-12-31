@@ -622,18 +622,6 @@ def instantiate_logistic_regression(trial) -> LogisticRegression:
     return LogisticRegression(**params)
 
 
-# def instantiate_lgbm_classifier(trial):
-#    params = {
-#        "boosting_type": trial.suggest_categorical(
-#            "boosting_type", ["gbdt", "dart", "rf"]
-#        ),
-#        "num_leaves": trial.suggest_int("num_leaves", 2, 64),
-#        "max_depth": trial.suggest_int("max_depth", -1, 20),
-#        "n_estimators": trial.suggest_int("n_estimators", 35, 150),
-#        "class_weight": "balanced",    }
-#    return LGBMClassifier(**params)
-
-
 def instantiate_lgbm_classifier(trial):
     params = {
         "boosting_type": trial.suggest_categorical(
@@ -642,9 +630,38 @@ def instantiate_lgbm_classifier(trial):
         "num_leaves": trial.suggest_int("num_leaves", 2, 64),
         "max_depth": trial.suggest_int("max_depth", -1, 20),
         "n_estimators": trial.suggest_int("n_estimators", 35, 150),
-        "class_weight": "balanced",
+        "class_weight":trial.suggest_categorical("class_weight",["balanced", None]),
+        "learning_rate": trial.suggest_float("learning_rate", 0,1),
     }
-    return LGBMClassifier(**params, verbose=-1)
+
+    return LGBMClassifier(**params, verbose=-1, device='gpu')
+
+
+def instantiate_lgbm_classifier_rf(trial):
+    params = {
+        #"boosting_type": trial.suggest_categorical("boosting_type", ["rf"]),
+        "num_leaves": trial.suggest_int("num_leaves", 2, 64),
+        "max_depth": trial.suggest_int("max_depth", -1, 20),
+        "n_estimators": trial.suggest_int("n_estimators", 35, 150),
+        #"learning_rate": trial.suggest_float("learning_rate", 0,1),
+        "objective": "binary",
+        "class_weight":trial.suggest_categorical("class_weight",["balanced", None]),   
+        "device": "gpu",
+        "bagging_freq": trial.suggest_int("bagging_freq", 1,100),
+        "feature_fraction_bynode": trial.suggest_float("feature_fraction_bynode", 0,1.0),
+        "extra_trees": trial.suggest_categorical("extra_trees", [True, False]),
+        "min_data_in_leaf": trial.suggest_int("min_data_in_leaf", 1,100),
+        "bagging_fraction": trial.suggest_float("bagging_fraction", 0.1, 0.9)
+
+
+    }
+    return LGBMClassifier(**params, boosting_type='rf',verbose=-1)
+
+
+
+
+
+
 
 
 def instantiate_xgboost(trial):
@@ -659,7 +676,7 @@ def instantiate_xgboost(trial):
         "n_estimators": trial.suggest_int("n_estimators", 50, 100),
         "learning_rate": trial.suggest_float("learning_rate", 0.01, 1),
     }
-    return XGBClassifier(**params)
+    return XGBClassifier(**params, device='gpu')
 
 
 def instantiate_random_forest(trial):
@@ -699,7 +716,7 @@ def model_selector(clf_string, trial: Trial):
     if clf_string == "logistic_regression":
         model = instantiate_logistic_regression(trial)
     elif clf_string == "random_forest":
-        model = instantiate_random_forest(trial)
+        model = instantiate_lgbm_classifier_rf(trial)
     elif clf_string == "extra_trees":
         model = instantiate_extra_trees(trial)
     elif clf_string == "lightgbm":
@@ -751,7 +768,7 @@ def instantiate_model(
     classifier,
     trial: Trial,
     numerical_columns: list[str],
-    categorical_columns: list[str],
+    categorical_columns: list[str],#gpu=True
 ) -> Pipeline:
 
     processor = instantiate_processor(trial, numerical_columns, categorical_columns)
