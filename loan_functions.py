@@ -169,7 +169,7 @@ def calculate_value_counts(df, feature):
     return value_counts
 
 
-def plot_histogram(df, feature, title="", text="percentages") -> None:
+def plot_histogram(df, feature, title="", text="percentages", format=None) -> None:
 
     value_counts = calculate_value_counts(df, feature)
 
@@ -184,7 +184,7 @@ def plot_histogram(df, feature, title="", text="percentages") -> None:
             hover_data="percentages",
         )
         .update_layout(bargap=0.2, title=title)
-        .show()
+        .show(format)
     )
 
 
