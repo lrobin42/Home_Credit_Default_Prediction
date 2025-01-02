@@ -233,7 +233,7 @@ def create_encoder_mapping(df, feature) -> dict[str, int]:
         .sort("values", descending=True)
     )
 
-    options: List = df[feature].to_list()
+    options: list = df[feature].to_list()
 
     numbers_to_encode = list(range(0, len(options)))
     encoding_key = {options[i]: numbers_to_encode[i] for i in range(len(options))}
@@ -303,48 +303,20 @@ def calculate_partial_correlation(df, feature1, feature2, control):
     )  # ['r'].values[0]
 
 
-def create_encoder_mapping(df, feature) -> dict[str, int]:
-    """Creates dictionary for mapping to encode categorical features
 
-    Args:
-        df (polars dataframe): dataframe of features
-        feature (string): name of feature of interest
-
-    Returns:
-        encoding_key: dictionary of feature values and numbers for encoding
-    """
-    df: DataFrame = (
-        df.group_by(feature)
-        .agg(pl.len().alias("values"))
-        .sort("values", descending=True)
-    )
-
-    options: List = df[feature].to_list()
-
-    numbers_to_encode = list(range(0, len(options)))
-    encoding_key = {options[i]: numbers_to_encode[i] for i in range(len(options))}
-
-    if df[feature].str.contains("Yes").to_list()[0] == True:
-        encoding_key: dict[str, int] = {"Yes": 1, "No": 0}
-
-    return encoding_key
-
-
-def encode_feature(df, feature, encoding_key) -> DataFrame:
-    """Encode features using supplied encoding key
-
-    Args:
-        df (polars): Dataframe to be modified
-        feature (string): feature to be encoded
-        encoding_key (dict): dictionary of values and numerical codes
-
-    Returns:
-        df: input dataframe with feature replaced by numerical values
-    """
-    df: DataFrame = df.with_columns(
-        df.select(pl.col(feature).replace(encoding_key)).cast({feature: pl.Int64})
-    )
-    return df
+#def encode_feature(df, feature, encoding_key) -> DataFrame:
+#    """Encode features using supplied encoding key
+#
+#    Args:
+#        df (polars): Dataframe to be modified
+#        feature (string): feature to be encoded
+#        encoding_key (dict): dictionary of values and numerical codes
+#
+#    Returns:
+#        df: input dataframe with feature replaced by numerical values
+#    """
+#    df: DataFrame = df.with_columns(df.select(pl.col(feature).replace(encoding_key)).cast({feature: pl.Int64})    )
+#    return df
 
 
 def retrieve_csv_columns(csv):
@@ -819,3 +791,18 @@ def objective(classifier, trial : Trial, x : DataFrame, y : np.ndarray | Series,
   scores = cross_val_score(model, x, y, scoring=roc_auc_scorer, cv=kf,error_score='raise')
 
   return np.min([np.mean(scores), np.median([scores])])
+
+
+def replicate_classifier_tuning(classifier, x, y, study_name='', n_trials=1):
+    study: Study = create_study(
+    direction="maximize",
+    study_name=study_name,
+    pruner=SuccessiveHalvingPruner(reduction_factor=2),
+    sampler=RandomSampler(seed=42),
+)
+
+    study.optimize(
+    lambda trial: objective(classifier, trial, x, y), n_trials=n_trials
+)
+    
+    return study.best_params
