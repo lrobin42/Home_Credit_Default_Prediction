@@ -611,7 +611,8 @@ def instantiate_lgbm_classifier_rf(trial):
         "n_estimators": trial.suggest_int("n_estimators", 35, 150),
         #"learning_rate": trial.suggest_float("learning_rate", 0,1),
         "objective": "binary",
-        "class_weight":trial.suggest_categorical("class_weight",["balanced", None]),   
+        #"class_weight":trial.suggest_categorical("class_weight",["balanced", None]),   
+        #"class_weight": {1:2.0, 0:1.0},
         "bagging_freq": trial.suggest_int("bagging_freq", 1,100),
         "feature_fraction_bynode": trial.suggest_float("feature_fraction_bynode", 0,1.0),
         "extra_trees": trial.suggest_categorical("extra_trees", [True, False]),
@@ -620,7 +621,7 @@ def instantiate_lgbm_classifier_rf(trial):
 
 
     }
-    return LGBMClassifier(**params, boosting_type='rf',verbose=-1, device='gpu')
+    return LGBMClassifier(**params, class_weight='balanced', boosting_type='rf',verbose=-1, device='gpu')
 
 def instantiate_xgboost(trial):
     params = {
