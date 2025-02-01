@@ -169,7 +169,7 @@ def calculate_value_counts(df, feature):
     return value_counts
 
 
-def plot_histogram(df, feature, title="", text="percentages", format=None) -> None:
+def plot_histogram(df, feature, title="", text="percentages", format=None, colorscale='DarkMint') -> None:
 
     value_counts = calculate_value_counts(df, feature)
 
@@ -179,7 +179,7 @@ def plot_histogram(df, feature, title="", text="percentages", format=None) -> No
             x=value_counts.index,
             y="count",
             color=value_counts.index,
-            color_continuous_scale="Darkmint",  #'Teal',
+            color_continuous_scale=colorscale,  #'Teal',
             text=text,
             hover_data="percentages",
         )
